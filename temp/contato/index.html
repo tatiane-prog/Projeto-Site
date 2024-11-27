@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mensagens</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .message-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .reply-box {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mensagens</h1>
+    <div id="message-container"></div>
+    <script>
+        async function fetchMessages() {
+            const response = await fetch('/messages');
+            const messages = await response.json();
+            const messageContainer = document.getElementById('message-container');
+            messageContainer.innerHTML = messages.map(msg => `
+                <div class="message-box">
+                    <p><strong>Remetente:</strong> ${msg.sender}</p>
+                    <p><strong>Mensagem:</strong> ${msg.message}</p>
+                    <div class="reply-box">
+                        <textarea rows="3" cols="50" placeholder="Digite sua resposta aqui..." data-id="${msg.id}"></textarea>
+                        <br>
+                        <button onclick="sendReply(${msg.id})">Enviar Resposta</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function sendReply(id) {
+            const textarea = document.querySelector(`textarea[data-id="${id}"]`);
+            const replyText = textarea.value;
+            if (replyText) {
+                await fetch('/reply', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id, reply: replyText })
+                });
+                alert('Resposta enviada!');
+                fetchMessages(); // Atualiza as mensagens
+            } else {
+                alert('Por favor, digite uma resposta antes de enviar.');
+            }
+        }
+
+        fetchMessages();
+    </script>
+</body>
+</html>
